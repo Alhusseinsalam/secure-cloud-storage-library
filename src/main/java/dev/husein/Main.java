@@ -1,16 +1,52 @@
 package dev.husein;
 
-import com.google.api.services.drive.Drive;
-import dev.husein.googledriveapiimp.DriveQuickstart;
+import com.google.api.services.drive.model.File;
+import dev.husein.securecloudstorage.cloudstorage.CloudStorageService;
+import dev.husein.securecloudstorage.cloudstorage.CloudStorageServiceFactory;
+import dev.husein.securecloudstorage.sync.DirectoryWatcher;
+import dev.husein.securecloudstorage.util.AppSettingsFileHandler;
+import dev.husein.securecloudstorage.util.DirectoryUtils;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
-    public static void main(String[] args) throws GeneralSecurityException, IOException {
-        Drive service = DriveQuickstart.getDriveService();
-        DriveQuickstart.listAllFiles(service);
+    public static void main(String[] args) throws InterruptedException {
+        CloudStorageService service = CloudStorageServiceFactory.create(CloudStorageServiceFactory.CloudServiceProvider.GOOGLE_DRIVE);
+
+        // call the thread to check directory every x seconds
+        DirectoryWatcher directoryWatcher = new DirectoryWatcher();
+        ScheduledExecutorService directoryCheckExecutor = Executors.newScheduledThreadPool(1);
+        directoryCheckExecutor.scheduleAtFixedRate(directoryWatcher, 0, 1, TimeUnit.SECONDS);
+
+        //
+        List<File> files = service.getAllAppHandledFiles();
+        printFiles(files);
+        DirectoryUtils.createLocalStorageFolders("/mnt/Data/Temp/todo_app");
+        AppSettingsFileHandler.initAppSettingsFile();
+        System.out.println(DirectoryUtils.getAppDataFolderPath());
+        System.out.println("Done!");
+
+
+        // just for test
+        Thread.sleep(5000);
+
+        // stop the executor when the application exit
+        directoryCheckExecutor.shutdown();
     }
 
+    public static void printFiles(List<File> files) {
+        if (files == null || files.isEmpty()) {
+            System.out.println("No files found.");
+        } else {
+            System.out.println("Files:");
+            for (File file : files) {
+                System.out.printf("%s - %s - %d - %s - %s - %s - %s\n", file.getName(), file.getId(), file.getSize() == null ? null : file.getSize(), file.getMimeType(), file.getParents(), file.getModifiedTime().toString(), file.getTrashed());
+            }
+        }
+    }
 }
