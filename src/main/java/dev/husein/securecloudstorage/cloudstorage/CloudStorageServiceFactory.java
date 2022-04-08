@@ -4,10 +4,7 @@ import dev.husein.securecloudstorage.cloudstorage.storageimpl.dropbox.DropboxSer
 import dev.husein.securecloudstorage.cloudstorage.storageimpl.googledrive.GoogleDriveService;
 
 public class CloudStorageServiceFactory {
-    public enum CloudServiceProvider {
-        GOOGLE_DRIVE,
-        DROPBOX
-    }
+
 
     public static CloudStorageService create(CloudServiceProvider provider) {
         if (provider == CloudServiceProvider.GOOGLE_DRIVE) {
