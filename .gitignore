@@ -1,3 +1,4 @@
 target/
 tokens/
 .idea/
+src/main/resources/credentials.json
